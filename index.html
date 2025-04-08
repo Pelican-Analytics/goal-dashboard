@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelican Analytics Dashboard</title>
+    <!-- Import Chart.js for data visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #000000;
+            --secondary: #FFFFFF;
+            --accent: #00A2FF;
+            --light-gray: #F0F0F0;
+            --dark-gray: #4D4D4D;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        /* Layout and Container Styles */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        header svg {
+            width: 64px;
+            height: 64px;
+            margin-right: 1rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+        }
+
+        h3 {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--secondary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Progress Bar Styles */
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .goal-input {
+            display: flex;
+            align-items: center;
+        }
+
+        .goal-input input {
+            width: 100px;
+            padding: 0.5rem;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            margin-right: 0.5rem;
+            text-align: right;
+        }
+
+        .progress-bar-container {
+            height: 2rem;
+            width: 100%;
+            background-color: #E0E0E0;
+            border-radius: 50px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: var(--secondary);
+            font-weight: 500;
+            transition: width 0.5s ease;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+        }
+
+        .current-revenue {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .current-revenue p:first-child {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Stat Card Styles */
+        .stat-card {
+            background-color: var(--secondary);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-icon {
+            background-color: rgba(0, 162, 255, 0.1);
+            color: var(--accent);
+            border-radius: 50%;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <svg viewBox="0 0 400 400" width="64" height="64">
+                <circle cx="200" cy="200" r="200" fill="#000000" />
+                <path d="M102,130 C105,125 114,124 120,128 C125,120 140,115 150,123 C158,115 173,115 180,122 C185,115 198,115 205,121
+                C210,115 224,116 230,122 C246,132 240,150 230,160 C235,165 235,180 227,187 C232,195 228,210 218,215
+                C222,230 215,245 203,247 C201,254 195,259 187,260 C187,269 182,277 172,280 C167,286 160,286 153,280
+                C146,281 140,277 138,270 C132,271 125,265 123,258 C115,262 107,262 102,255 C95,258 85,254 82,247
+                C73,248 63,242 60,233 C51,235 40,228 37,220 C28,221 18,213 17,203 C11,203 7,199 6,193
+                C-10,180 5,160 25,172 C21,164 24,150 33,145 C33,136 38,128 46,125 C47,115 55,108 65,108
+                C70,98 84,96 95,102 C100,96 110,95 115,101 C120,95 132,96 138,103 C143,94 152,91 160,95 C165,89 174,87 180,92
+                C184,87 193,87 197,92 C102,130" 
+                fill="none" stroke="#FFFFFF" stroke-width="2" />
+                <text x="200" y="320" text-anchor="middle" fill="#FFFFFF" font-size="40" font-weight="bold">PELICAN</text>
+                <text x="200" y="355" text-anchor="middle" fill="#FFFFFF" font-size="20">ANALYTICS</text>
+            </svg>
+            <div>
+                <h1>Pelican Analytics Dashboard</h1>
+                <p>Consulting Revenue Tracker</p>
+            </div>
+        </header>
+
+        <!-- Revenue Goal Progress Section -->
+        <div class="card">
+            <div class="goal-header">
+                <h2>Annual Revenue Goal</h2>
+                <div class="goal-input">
+                    <input type="number" id="currentRevenue" value="42000">
+                    <span>/ $100,000</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar">42.0%</div>
+            </div>
+
+            <div class="progress-labels">
+                <span>$0</span>
+                <span>$25,000</span>
+                <span>$50,000</span>
+                <span>$75,000</span>
+                <span>$100,000</span>
+            </div>
+
+            <div class="current-revenue">
+                <p id="revenueDisplay">$42,000</p>
+                <p id="percentageDisplay">Current Revenue (42.0% to goal)</p>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" style="margin-bottom: 1.5rem;">
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Average Monthly</p>
+                    <p class="stat-value" id="avgMonthly">$10,500</p>
+                </div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                        <polyline points="16 7 22 7 22 13"></polyline>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Projected EOY</p>
+                    <p class="stat-value" id="projectedEOY">$126,000</p>
+                </div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Active Clients</p>
+                    <p class="stat-value">4</p>
+                </div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <p class="stat-label">Last Month</p>
+                    <p class="stat-value">+20%</p>
+                </div>
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                        <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid">
+            <!-- Client Revenue Chart -->
+            <div class="card">
+                <h3>Revenue by Client</h3>
+                <div class="chart-container">
+                    <canvas id="clientChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Service Type Revenue Chart -->
+            <div class="card">
+                <h3>Revenue by Service Type</h3>
+                <div class="chart-container">
+                    <canvas id="serviceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Revenue Chart -->
+        <div class="card">
+            <h3>Monthly Revenue</h3>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const annualGoal = 100000;
+        let currentRevenue = 42000;
+        
+        const monthlyData = [
+            { name: 'Jan', revenue: 1875 },
+            { name: 'Feb', revenue: 1875 },
+            { name: 'Mar', revenue: 2075 },
+            { name: 'Apr', revenue: 1875 },
+            { name: 'May', revenue: 0 },
+            { name: 'Jun', revenue: 0 },
+            { name: 'Jul', revenue: 0 },
+            { name: 'Aug', revenue: 0 },
+            { name: 'Sep', revenue: 0 },
+            { name: 'Oct', revenue: 0 },
+            { name: 'Nov', revenue: 0 },
+            { name: 'Dec', revenue: 0 }
+        ];
+
+        const clientData = [
+            { name: 'Tech-Moms', revenue: 7500 },
+            { name: 'Engage Africa', revenue: 200 },
+            { name: 'DIY.org', revenue: 10000 },
+            { name: 'Troomi', revenue: 7000 }
+        ];
+        
+        const serviceData = [
+            { name: 'Education', revenue: 7700 },
+            { name: 'Data Analysis', revenue: 7000 },
+            { name: 'AI & Automation', revenue: 8000 }
+        ];
+
+        // DOM Elements
+        const currentRevenueInput = document.getElementById('currentRevenue');
+        const progressBar = document.getElementById('progressBar');
+        const revenueDisplay = document.getElementById('revenueDisplay');
+        const percentageDisplay = document.getElementById('percentageDisplay');
+        const avgMonthlyDisplay = document.getElementById('avgMonthly');
+        const projectedEOYDisplay = document.getElementById('projectedEOY');
+
+        // Update UI based on revenue
+        function updateUI() {
+            const percentToGoal = (currentRevenue / annualGoal) * 100;
+            
+            // Update progress bar
+            progressBar.style.width = `${Math.min(percentToGoal, 100)}%`;
+            if (percentToGoal >= 10) {
+                progressBar.textContent = `${percentToGoal.toFixed(1)}%`;
+            } else {
+                progressBar.textContent = '';
+            }
+            
+            // Update displays
+            revenueDisplay.textContent = `$${currentRevenue.toLocaleString()}`;
+            percentageDisplay.textContent = `Current Revenue (${percentToGoal.toFixed(1)}% to goal)`;
+            
+            // Update stats
+            const avgMonthly = currentRevenue / 4; // Assuming 4 months of data
+            avgMonthlyDisplay.textContent = `$${avgMonthly.toLocaleString()}`;
+            
+            const projectedEOY = currentRevenue * 3; // Simple projection
+            projectedEOYDisplay.textContent = `$${projectedEOY.toLocaleString()}`;
+        }
+
+        // Handle input change
+        currentRevenueInput.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (!isNaN(value)) {
+                currentRevenue = value;
+                updateUI();
+            }
+        });
+
+        // Initialize Client Revenue Chart
+        const clientChartCtx = document.getElementById('clientChart').getContext('2d');
+        const clientChart = new Chart(clientChartCtx, {
+            type: 'bar',
+            data: {
+                labels: clientData.map(item => item.name),
+                datasets: [{
+                    label: 'Revenue',
+                    data: clientData.map(item => item.revenue),
+                    backgroundColor: '#00A2FF',
+                    borderRadius: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Revenue: $${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize Monthly Revenue Chart
+        const monthlyChartCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyChartCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.map(item => item.name),
+                datasets: [{
+                    label: 'Revenue',
+                    data: monthlyData.map(item => item.revenue),
+                    fill: false,
+                    borderColor: '#00A2FF',
+                    tension: 0.1,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#000000',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Revenue: $${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize Service Type Revenue Chart
+        const serviceChartCtx = document.getElementById('serviceChart').getContext('2d');
+        const serviceChart = new Chart(serviceChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: serviceData.map(item => item.name),
+                datasets: [{
+                    data: serviceData.map(item => item.revenue),
+                    backgroundColor: [
+                        '#00A2FF',  // Blue for Education
+                        '#000000',  // Black for Data Analysis
+                        '#4D4D4D'   // Gray for AI & Automation
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initial UI update
+        updateUI();
+    </script>
+</body>
+</html>
